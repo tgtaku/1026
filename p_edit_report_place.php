@@ -1,30 +1,11 @@
 <?php
+//追加処理の変更情報登録
 
 //プロジェクトIDの取得
 $project_id = "";
 session_start();
 $project_id = $_SESSION['count'];
 $project_id_now = json_encode($project_id);
-
-//呼び出し元で読み込む情報を替えようとした→sessionで解決
-/*
-if(isset($_SERVER['HTTP_REFERER'])){
-    $refe = $_SERVER['HTTP_REFERER'];
-}else{
-    $refe ="";
-}
-$mypage = "http://10.20.170.52/web/p_entry.php";
-$edit_projects = "http://10.20.170.52/web/p_edit_project";
-if($refe == $mypage){
-    session_start();
-    $project_id = $_SESSION['count'];
-    $project_id_now = json_encode($project_id);
-}elseif($refe == $edit_projects){
-    $project_id = $_POST['select_project_id'];
-}else{
-    $project_id = 70;
-    $project_id_now = json_encode($project_id);
-}*/
 
 //mysqlとの接続
 $link = mysqli_connect('localhost', 'root', '');
@@ -108,12 +89,30 @@ for($i = 0; $i < count($row_array_file); $i++ ){
         //print_r($selectedPD);
     }
 }
+
+//既存報告箇所の取得
+//取得用配列
+$edit_array = [];
+require "conn.php";
+$mysql_qry = "select * from report_places_infomation_1 inner join pdf_information_1 on report_places_infomation_1.pdf_id = pdf_information_1.pdf_id where pdf_information_1.project_id = '$project_id';";
+    $result = mysqli_query($conn, $mysql_qry);
+    if(mysqli_num_rows($result) > 0){
+        $i = 0;
+        while($row = mysqli_fetch_assoc($result)){
+            array_push($edit_array, $row);
+            $i++;
+        }
+    }
+    //print_r($edit_array);
+$json_array_edit_point = json_encode($edit_array);
+
 $selectedPDF = json_encode($selectedPD);
 $array_length = count($row_array_file);
 $json_array = json_encode($row_array_file);
 $json_array_glob = json_encode($row_array_glob);
 //print_r($project_id_now);
 ?>
+
 <!DOCTYPE html>
 
 <html>
@@ -147,35 +146,78 @@ $json_array_glob = json_encode($row_array_glob);
     <h2 id ="selectedPDF">図面名</h2>
     <h4 id ="pagenum"></h4>
     <h4 id = "pagesum"></h4>
-    <script type="text/javascript">
-    console.log("ID : " + <?php echo $_SESSION['count']; ?>);
+    <div id ="div">
+    <img alt = "図面を選択してください" title = "test" id ="im" >
 
-    //表示しているPDFの番号
-    var pdf_num = 0;
+    </div>
+    <div>
+    <img src="left.png" title = "left" id ="left" >
+    <img src="right.png" title = "right" id ="right" >
+</div>
+    <form id="place_form">
+    <table id = "place_info">
+                <tr>
+                    <th style="WIDTH: 15px" id="no">No</th>
+                    <th style="WIDTH: 300px" id="place">施工箇所</th>
+                    <th style="WIDTH: 60px" id="page">ページ</th>
+                    <th style="WIDTH: 60px" id="x">X</th>
+                    <th style="WIDTH: 60px" id="y">Y</th>
+                </tr>
+            </table>
+            <input type = "button" id = "place_button" name="gotPlace" value = "登録" onclick = "ent()">
+            
+</form>
+</div>
+            </div>
+        </div>
+</main>
+    <script>
+        //初期処理
+        //表示PDF番号
+        var pdf_num = 0;
 
-        //var names =[];
-        var p_id = <?php echo $project_id_now; ?>;
-        var names = <?php echo $json_array; ?>;
-        var length = <?php echo $array_length; ?>;
+        //phpから受け取り
+        var id = <?php echo $_SESSION['count']; ?>; //id
+        var array_edit = <?php echo $json_array_edit_point; ?>; //DBに登録されている報告箇所の配列
+        var array_file_name = <?php echo $json_array; ?>; //ファイル名
+
+        console.log("ID : " + <?php echo $_SESSION['count']; ?>);
+        console.log("array : " + <?php echo $json_array; ?>);
+
+        //図面変更用のボタン作成
+        //ボタン用配列
         var li = [];
-        //var parent = document.getElementById('pdfName');
-        for (var i = 0; i < length; i++){
+        for (var i = 0; i < array_file_name.length; i++){
             li[i] = document.createElement('button');
             li[i].id = i;
-            li[i].value = names[i];
-            li[i].textContent = names[i];
+            li[i].value = array_file_name[i];
+            li[i].textContent = array_file_name[i];
             li[i].onclick = function(){getPic(this)};
             //parent.appendChild(li[i]);
             document.getElementById('pdfName').appendChild(li[i]);
-            document.getElementById('selectedPDF').innerHTML = names[0];
+            document.getElementById('selectedPDF').innerHTML = array_file_name[0];
         }
 
+        //図面情報の表示
+        //ディレクトリにあるファイル数
+        var globNum = <?php echo $json_array_glob; ?>;
+        var pageNum = 0;
+        //配列の何番目にあるか保持する
+        var gn = 0;
+        var globPage = globNum[gn];
+        var globPageNum = globPage + "ページ";
+        var page = pageNum+1 + "ページ / ";
+        var p = document.getElementById('pagenum');
+        p.innerHTML = page;
+        var ps = document.getElementById('pagesum');
+        ps.innerHTML = globPageNum;
+
         //報告箇所配列の作成
-        var array_no = [];
-        var array_point_name = [];
-        var array_point_x = [];
-        var array_point_y = [];
-        var array_page = [];
+        var array_no = []; //no
+        var array_point_name = []; //報告箇所
+        var array_point_x = []; //x
+        var array_point_y = []; //y
+        var array_page = []; //page番号
         for (var h = 0; h < li.length; h++){
             array_no[h] = [];
             array_point_name[h] = [];
@@ -183,130 +225,68 @@ $json_array_glob = json_encode($row_array_glob);
             array_point_y[h] = [];
             array_page[h] = [];
         }
-        
-        //document.getElementById("pdfName").children.onclick = function(){};
-    </script>
-    
-    <script>
-        function getPic(obj){
-            //PDF変更時の処理
-            pdf_num = obj.id;
-            /*//テーブル取得
-            var table = document.getElementById("place_info");
-            var s_name;
-            var s_page;
-            var s_x;
-            var s_y;
-            if(table.rows.length != 1){
-                for(var i = 1; i<table.rows.length; i++){
-            s_name = table.rows[i].cells[1].innerHTML;
-            s_page = table.rows[i].cells[2].innerHTML;
-            s_x = table.rows[i].cells[3].innerHTML;
-            s_y = table.rows[i].cells[4].innerHTML;
-            // フォームデータを取得
-            //pdfIDの取得
-            fd = new FormData();
-            var file = document.getElementById('selectedPDF').innerHTML;
-            fd.append('id', p_id);
-            fd.append('file',file);
-            fd.append('s_name', s_name);
-            fd.append('s_page', s_page);
-            fd.append('s_x',s_x);
-            fd.append('s_y', s_y);
-            xhttpreq = new XMLHttpRequest();
-            xhttpreq.onreadystatechange = function() {
-                if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
-                    alert(xhttpreq.responseText);
-                }
-            };
-            xhttpreq.open("POST", "insert_report_place.php", true);
-            xhttpreq.send(fd);
-            }*/
-            
-            //テーブル削除
-            var deltable = document.getElementById('place_info');
-            var deltabLength = deltable.rows.length;
-            dltabLength = deltabLength-1;
-            //console.log(deltabLength);
-            for(var n = deltabLength-1; n > 0; n--){
-                deltable.deleteRow(n);
-                //tableTarget.rows[i].cells[0].innerHTML = i;
-            }
-            //配列の初期化
-            cell1 = [];
-            cell2 = [];
-            cell3 = [];
-            cell4 = [];
-            cell5 = [];
-            cell6 = [];
 
-            //マーク削除
-            var dldiv = document.getElementById('div').children;
-            var dllength = dldiv.length;
-            //console.log(dldiv);
-            //console.log(dllength);
-            for(var m = 0; m < dllength; m++){
-                //console.log(m);
-                //console.log(dldiv.item(m));
-                if(dldiv.item(m).id =="pic"){
-                    //var iL = dldiv.item(m).length:
-                    //console.log(iL);
-                    
-                    //console.log("del");
-                    var dl = dldiv.item(m);
-                    dl.parentNode.removeChild(dl);
-                    m--;
-                    dllength--;
+        //テーブル記述用の配列の初期化
+        cell1 = [];
+        cell2 = [];
+        cell3 = [];
+        cell4 = [];
+        cell5 = [];
+        cell6 = [];
+
+        //既存の報告箇所を配列化する
+        var edit_array = <?php echo $json_array_edit_point; ?>;
+        for(var m = 0; m < edit_array.length; m++){
+            //PDF名がnamesのどれと一致するか確認し、一致した番号の配列にそれぞれの値を格納
+            for(var n = 0; n < array_file_name.length; n++){
+                if(edit_array[m]['pdf_name'] == array_file_name[n]){
+                    array_no[n].push("");
+                    array_point_name[n].push(edit_array[m]['report_place_name']);
+                    array_point_x[n].push(edit_array[m]['X']);
+                    array_point_y[n].push(edit_array[m]['Y']);
+                    array_page[n].push(edit_array[m]['page']);
+                    break;
+                }else{
                 }
             }
-            //}
-            
-            //dldiv.parentNode.removeChild(dldiv);
-            
-            //dldiv.remove();
+        }
 
-            var target_name = obj.value;
-            document.getElementById('selectedPDF').innerHTML = target_name;
-            var index = names.indexOf(target_name);
-            //console.log(index);
-            pageNum = 0;
-            p.innerHTML = pageNum + 1 + "ページ / ";
-            //ページ数に挿入
-            ps.innerHTML = globNum[index] + "ページ";
-            //画像を表示
-            selected_img = target_name.substr(0, target_name.length -4);
-            //selected_img_name = "./up/" + change + "/" + change + "-0.png";
-            //var first_img = "./up/sample/sample-0.png";
-            selected_img_name = "./up/" + selected_img + "/" + selected_img +"-0.png";
-            img.src = selected_img_name;
-
-            //配列に持っている情報を取得→持っていた場合テーブルに記入
+        //配列に持っている情報を取得→持っていた場合テーブルに記入
             //配列にある要素の数を取得
-            var table_array_num = array_no[pdf_num].length;
+            var table_array_num = array_point_name[0].length;
             console.log(table_array_num);
             //要素の数だけテーブルを追加
             var table = document.getElementById('place_info');
             for(var l = 0; l < table_array_num; l++){
                 var row = table.insertRow(-1);
                 cell1.push(row.insertCell(-1));
-            cell2.push(row.insertCell(-1));
-            cell3.push(row.insertCell(-1));
-            cell4.push(row.insertCell(-1));
-            cell5.push(row.insertCell(-1));
-            cell6.push(row.insertCell(-1));
-            cell1[l].innerHTML = array_no[pdf_num][l];
-            cell2[l].innerHTML = array_point_name[pdf_num][l];
-            cell3[l].innerHTML = array_page[pdf_num][l];
-            cell4[l].innerHTML = array_point_x[pdf_num][l];
-            cell5[l].innerHTML = array_point_y[pdf_num][l];
-            cell6[l].innerHTML = '<input type = "button" value = "削除" onClick= "deleteRow(this)" />'; 
+                cell2.push(row.insertCell(-1));
+                cell3.push(row.insertCell(-1));
+                cell4.push(row.insertCell(-1));
+                cell5.push(row.insertCell(-1));
+                cell6.push(row.insertCell(-1));
+                cell1[l].innerHTML = l + 1;
+                cell2[l].innerHTML = array_point_name[0][l];
+                cell3[l].innerHTML = array_page[0][l];
+                cell4[l].innerHTML = array_point_x[0][l];
+                cell5[l].innerHTML = array_point_y[0][l];
+                cell6[l].innerHTML = '<input type = "button" value = "削除" onClick= "deleteRow(this)" />'; 
             }
+
+
+        //図面画像の表示
+        var img = document.getElementById('im');
+        var selected_img = <?php echo $selectedPDF; ?>;
+        var selected_img_name = "./up/" + selected_img + "/" + selected_img +"-0.png";
+        img.src = selected_img_name;
+        img.onload = function(){
+            
             //1ページ目のマークを表示
             //テーブルの値を確認→ページに該当するものが存在した場合、表示
             var checktable = document.getElementById('place_info');
             var checkLength = checktable.rows.length;
             for(var c = 1; c < checkLength; c++){
-                if(checktable.rows[c].cells[2].innerHTML == pageNum+1){
+                if(checktable.rows[c].cells[2].innerHTML == pageNum + 1){
                     //console.log(checktable.rows[c].cells[3].innerHTML)
                     var cBall = document.createElement('d'); 
                     cBall.id = "pic";
@@ -325,7 +305,7 @@ $json_array_glob = json_encode($row_array_glob);
                     var w1 = parseInt(w);
                     var h = elem.height;
                     var h1 = parseInt(h);
-                    
+
                     //画面サイズから表示位置を取得
                     var pointx = parseFloat(checktable.rows[c].cells[3].innerHTML);
                     var pointy = parseFloat(checktable.rows[c].cells[4].innerHTML);
@@ -345,12 +325,6 @@ $json_array_glob = json_encode($row_array_glob);
                     mark.addEventListener('click', function(event2){
                     var bef_change = this.value;
                     var placeValue = window.prompt("施工箇所名変更", this.value);
-                    /*console.log(event2.pageX);
-                    console.log(event2.id);
-                    console.log(event2.parentNode);
-                    var elem = document.getElementById('im');
-                    console.log(elem.getBoundingClientRect());*/
-                    //var rect = elem.getBoundingClientRect();
                     if(placeValue == bef_change){
 
                     }else if(placeValue == null){
@@ -363,7 +337,7 @@ $json_array_glob = json_encode($row_array_glob);
                         if(checktable.rows[c].cells[1].innerHTML == bef_change){
                         checktable.rows[c].cells[1].innerHTML = placeValue;
                         array_point_name[pdf_num][c-1] = placeValue;
-                        console.log(array_point_name[pdf_num][c-1]);
+                        console.log("1" + array_point_name[pdf_num][c-1]);
                         //console.log(placeValue);
                     }
                 }
@@ -375,43 +349,14 @@ $json_array_glob = json_encode($row_array_glob);
                     div.appendChild(cBall);
                 }
             }
-            
+            var dldiv = document.getElementById('div').children;
+            console.log(dldiv);
+        console.log(array_point_name);
+        console.log(edit_array.length);
         }
 
         
-    </script>
-    <script>
-        //ディレクトリにあるファイル数
-        var globNum = <?php echo $json_array_glob; ?>;
-        var pageNum = 0;
-        //配列の何番目にあるか保持する
-        var gn = 0;
-        var globPage = globNum[gn];
-        var globPageNum = globPage + "ページ";
-        var page = pageNum+1 + "ページ / ";
-        var p = document.getElementById('pagenum');
-        p.innerHTML = page;
-        var ps = document.getElementById('pagesum');
-        ps.innerHTML = globPageNum;
-    </script>
-    <div id ="div">
-    <img alt = "図面を選択してください" title = "test" id ="im" >
-    <script>
-        var img = document.getElementById('im');
-        var m = <?php echo $selectedPDF; ?>;
-        console.log(m);
-        var selected_img = <?php echo $selectedPDF; ?>;
-        //var selected_img_dir = "./up/" + selected_img +"/";
-        var selected_img_name = "./up/" + selected_img + "/" + selected_img +"-0.png";
-        //var first_img = "./up/sample/sample-0.png";
-        img.src = selected_img_name;
-    </script>
-    </div>
-    <div>
-    <img src="left.png" title = "left" id ="left" >
-    <img src="right.png" title = "right" id ="right" >
-</div>
-    <script>
+        //矢印ボタンの処理
         var right = document.getElementById('right');
         var left = document.getElementById('left');
 
@@ -426,18 +371,18 @@ $json_array_glob = json_encode($row_array_glob);
             }
             //マーク削除
             var dldiv = document.getElementById('div').children;
-            var dllength = dldiv.length;
             console.log(dldiv);
+            var dllength = dldiv.length;
+            //console.log(dldiv);
             //console.log(dllength);
             for(var m = 0; m < dllength; m++){
                 //console.log(m);
-                console.log(dldiv.item(m));
+                //console.log(dldiv.item(m));
+                console.log(dldiv.item(m).id);
                 if(dldiv.item(m).id =="pic"){
-                    //var iL = dldiv.item(m).length:
-                    //console.log(iL);
-                    
-                    //console.log("del");
+                    console.log("del");
                     var dl = dldiv.item(m);
+                    //dl.parentNode.removeChild(dl);
                     dl.parentNode.removeChild(dl);
                     m--;
                     dllength--;
@@ -448,6 +393,7 @@ $json_array_glob = json_encode($row_array_glob);
             var checktable = document.getElementById('place_info');
             var checkLength = checktable.rows.length;
             for(var c = 1; c < checkLength; c++){
+                console.log(pageNum);
                 if(checktable.rows[c].cells[2].innerHTML == pageNum+1){
                     //console.log(checktable.rows[c].cells[3].innerHTML)
                     var cBall = document.createElement('d'); 
@@ -487,12 +433,6 @@ $json_array_glob = json_encode($row_array_glob);
                     mark.addEventListener('click', function(event2){
                         var bef_change = this.value;
                     var placeValue = window.prompt("施工箇所名変更", this.value);
-                    /*console.log(event2.pageX);
-                    console.log(event2.id);
-                    console.log(event2.parentNode);
-                    var elem = document.getElementById('im');
-                    console.log(elem.getBoundingClientRect());*/
-                    //var rect = elem.getBoundingClientRect();
                     if(placeValue == bef_change){
 
                     }else if(placeValue == null){
@@ -592,12 +532,6 @@ $json_array_glob = json_encode($row_array_glob);
                     mark.addEventListener('click', function(event2){
                         var bef_change = this.value;
                     var placeValue = window.prompt("施工箇所名変更", this.value);
-                    /*console.log(event2.pageX);
-                    console.log(event2.id);
-                    console.log(event2.parentNode);
-                    var elem = document.getElementById('im');
-                    console.log(elem.getBoundingClientRect());*/
-                    //var rect = elem.getBoundingClientRect();
                     if(placeValue == bef_change){
 
                     }else if(placeValue == null){
@@ -624,26 +558,9 @@ $json_array_glob = json_encode($row_array_glob);
             }
 
         }, false);
-    </script>
-    <script>
-        var img = document.getElementById('im');
-        //var table = document.getElementById('place_info');
-        var cell1 = [];
-        var cell2 = [];
-        var cell3 = [];
-        var cell4 = [];
-        var cell5 = [];
-        var cell6 = [];
 
-        
         img.addEventListener('click', function(event){
-            /*cell1 = [];
-            cell2 = [];
-            cell3 = [];
-            cell4 = [];
-            cell5 = [];
-            cell6 = [];*/
-
+            
             var pValue = window.prompt("施工箇所名を入力してください", "");
             console.log(pValue);
             if(pValue == null){
@@ -688,12 +605,6 @@ $json_array_glob = json_encode($row_array_glob);
             //座標上の比率を計算
             var pointX = x2/w1;
             var pointY = y2/h1;
-
-            //var y = touch.pageY;
-            //alert(pointX);
-            //console.log(x1);
-            //console.log(w1);
-            //console.log(pointX);
             
             //動的にdivを作成する
             var cBall = document.createElement('d'); 
@@ -710,12 +621,6 @@ $json_array_glob = json_encode($row_array_glob);
             mark.addEventListener('click', function(event2){
                 var bef_change = this.value;
                     var placeValue = window.prompt("施工箇所名変更", this.value);
-                    /*console.log(event2.pageX);
-                    console.log(event2.id);
-                    console.log(event2.parentNode);
-                    var elem = document.getElementById('im');
-                    console.log(elem.getBoundingClientRect());*/
-                    //var rect = elem.getBoundingClientRect();
                     if(placeValue == bef_change){
 
                     }else if(placeValue == null){
@@ -742,12 +647,6 @@ $json_array_glob = json_encode($row_array_glob);
             //テーブルの追加
             //console.log(table);
             var row = table.insertRow(-1);
-            /*array_no[pdf_num].push(row.insertCell(-1));
-            array_point_name[pdf_num].push(row.insertCell(-1));
-            array_page[pdf_num].push(row.insertCell(-1));
-            array_point_x[pdf_num].push(row.insertCell(-1));
-            array_point_y[pdf_num].push(row.insertCell(-1));*/
-            
             array_no[pdf_num][num] = tabLength;
             array_point_name[pdf_num][num] = pValue;
             array_page[pdf_num][num] = pageNum + 1;
@@ -780,122 +679,14 @@ $json_array_glob = json_encode($row_array_glob);
         }
             //console.log(table);
         }, false);
-    
-        </script>
-    <form id="place_form">
-    <table id = "place_info">
-                <tr>
-                    <th style="WIDTH: 15px" id="no">No</th>
-                    <th style="WIDTH: 300px" id="place">施工箇所</th>
-                    <th style="WIDTH: 60px" id="page">ページ</th>
-                    <th style="WIDTH: 60px" id="x">X</th>
-                    <th style="WIDTH: 60px" id="y">Y</th>
-                </tr>
-            </table>
-            <input type = "button" id = "place_button" name="gotPlace" value = "登録" onclick = "ent()">
-            
-</form>
-</div>
-            </div>
-        </div>
-</main>
-<script>
+    </script>
 
-
-            /*function to_entry_user(){
-            //console.log("to_entry_user");
-            //dirの削除
-            //formdata = new FormData();
-            for(var d = 0; d < deldir.length; d++){
-                formdata = new FormData();
-                formdata.append('dir', deldir[d]);
-                xhttpreq = new XMLHttpRequest();
-                xhttpreq.onreadystatechange = function() {
-                if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
-                    alert(xhttpreq.responseText);
-                }
-            };
-            xhttpreq.open("POST", "remdir.php", true);
-            xhttpreq.send(formdata);
-            
-            }
-            
-            
-            
-            //テーブル取得
-            var table = document.getElementById("place_info");
-            var s_name;
-            var s_page;
-            var s_x;
-            var s_y;
-            for(var i = 1; i<table.rows.length; i++){
-            s_name = table.rows[i].cells[1].innerHTML;
-            s_page = table.rows[i].cells[2].innerHTML;
-            s_x = table.rows[i].cells[3].innerHTML;
-            s_y = table.rows[i].cells[4].innerHTML;
-            // フォームデータを取得
-            //pdfIDの取得
-            fd = new FormData();
-            var file = document.getElementById('selectedPDF').innerHTML;
-            fd.append('id', p_id);
-            fd.append('file',file);
-            fd.append('s_name', s_name);
-            fd.append('s_page', s_page);
-            fd.append('s_x',s_x);
-            fd.append('s_y', s_y);
-            fd.append('to_user', "to_user")
-            xhttpreq = new XMLHttpRequest();
-            xhttpreq.onreadystatechange = function() {
-                if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
-                    alert(xhttpreq.responseText);
-                }
-            };
-            xhttpreq.open("POST", "insert_report_place.php", true);
-            xhttpreq.send(fd);
-            }
-            
-            //テーブル削除
-            var deltable = document.getElementById('place_info');
-            var deltabLength = deltable.rows.length;
-            dltabLength = deltabLength-1;
-            //.log(deltabLength);
-            for(var n = deltabLength-1; n > 0; n--){
-                deltable.deleteRow(n);
-                //tableTarget.rows[i].cells[0].innerHTML = i;
-            }
-            cell1 = [];
-            cell2 = [];
-            cell3 = [];
-            cell4 = [];
-            cell5 = [];
-
-            //マーク削除
-            var dldiv = document.getElementById('div').children;
-            var dllength = dldiv.length;
-            //console.log(dldiv);
-            //console.log(dllength);
-            for(var m = 0; m < dllength; m++){
-                //console.log(m);
-                //console.log(dldiv.item(m));
-                if(dldiv.item(m).id =="pic"){
-                    //var iL = dldiv.item(m).length:
-                    //console.log(iL);
-                    
-                    //console.log("del");
-                    var dl = dldiv.item(m);
-                    dl.parentNode.removeChild(dl);
-                    m--;
-                    dllength--;
-                }
-            }
-            //console.log("test");
-            
-            
-            }*/
+    <script>
 
         function deleteRow(obj) {
         // 削除ボタンを押下された行を取得
         tr = obj.parentNode.parentNode;
+        console.log(tr.cells[0].innerHTML);
         // trのインデックスを取得して行を削除する
         tr.parentNode.deleteRow(tr.sectionRowIndex);
         //Noの変更
@@ -917,34 +708,26 @@ $json_array_glob = json_encode($row_array_glob);
         cell5.splice(tr.cells[0].innerHTML-1,1);
         cell6.splice(tr.cells[0].innerHTML-1,1);
 
-        console.log(names);
-        console.log(array_point_name[pdf_num]);
-        console.log(array_point_x[pdf_num]);
-        console.log(array_point_y[pdf_num]);
-        console.log(array_page[pdf_num]);
-
         //マークを削除
         //var dldiv = document.getElementById('div').children;
         var dldiv = document.getElementById('div').children;
-        var dl = dldiv.item(parseInt(tr.cells[0].innerHTML)+1);
+        var dl = dldiv.item(parseInt(tr.cells[0].innerHTML));
         dl.parentNode.removeChild(dl);
         
         }
 
-            function ent(){
+        function ent(){
+            for(var i = 0; i < array_point_name.length; i++){
+                if(array_point_name[i][0] == null){
+
+                }else{
+                    
             fd = new FormData();
-            //var file = document.getElementById('selectedPDF').innerHTML;
-            fd.append('names', names);
-            fd.append('array_point_name', array_point_name);
-            fd.append('pointx',array_point_x);
-            fd.append('pointy', array_point_y);
-            fd.append('page', array_page);
-            var array_num = [];
-            for(var n = 0; n < li.length; n++){
-                array_num.push(array_point_name[n].length);
-            }
-            fd.append('num', array_num);
-            fd.append('count_pdf', li.length);
+            fd.append('file_name', array_file_name[i]);
+            fd.append('array_point_name', array_point_name[i]);
+            fd.append('pointx',array_point_x[i]);
+            fd.append('pointy', array_point_y[i]);
+            fd.append('page', array_page[i]);
             console.log(fd);
             xhttpreq = new XMLHttpRequest();
             xhttpreq.onreadystatechange = function() {
@@ -952,14 +735,177 @@ $json_array_glob = json_encode($row_array_glob);
                     alert(xhttpreq.responseText);
                 }
             };
-            xhttpreq.open("POST", "insert_report_place_info.php", true);
+            xhttpreq.open("POST", "update_report_place_info.php", true);
             xhttpreq.addEventListener('load', (event) => {
-                window.location.href = 'p_entry_user.php';
+                //window.location.href = 'mypage.php';
             });
             xhttpreq.send(fd);
+                    console.log(array_no[i]);
+            
+                    console.log(array_point_name[i]);
+            
+                    console.log(array_point_x[i]);
+            
+                    console.log(array_point_y[i]);
+            
+                    console.log(array_page[i]);
+                }
+                
             }
             
-            </script>
+            }
+
+            function getPic(obj){
+            //PDF変更時の処理
+            pdf_num = obj.id;
+            console.log(pdf_num);
+            
+            //テーブル削除
+            var deltable = document.getElementById('place_info');
+            var deltabLength = deltable.rows.length;
+            dltabLength = deltabLength-1;
+            //console.log(deltabLength);
+            for(var n = deltabLength-1; n > 0; n--){
+                deltable.deleteRow(n);
+                //tableTarget.rows[i].cells[0].innerHTML = i;
+            }
+            //配列の初期化
+            cell1 = [];
+            cell2 = [];
+            cell3 = [];
+            cell4 = [];
+            cell5 = [];
+            cell6 = [];
+
+            //マーク削除
+            var dldiv = document.getElementById('div').children;
+            var dllength = dldiv.length;
+            //console.log(dldiv);
+            //console.log(dllength);
+            for(var m = 0; m < dllength; m++){
+                //console.log(m);
+                //console.log(dldiv.item(m));
+                if(dldiv.item(m).id =="pic"){
+                    //var iL = dldiv.item(m).length:
+                    //console.log(iL);
+                    
+                    //console.log("del");
+                    var dl = dldiv.item(m);
+                    dl.parentNode.removeChild(dl);
+                    m--;
+                    dllength--;
+                }
+            }
+            
+            var target_name = obj.value;
+            document.getElementById('selectedPDF').innerHTML = target_name;
+            var index = array_file_name.indexOf(target_name);
+            //console.log(index);
+            pageNum = 0;
+            p.innerHTML = pageNum + 1 + "ページ / ";
+            //ページ数に挿入
+            ps.innerHTML = globNum[index] + "ページ";
+            //画像を表示
+            selected_img = target_name.substr(0, target_name.length -4);
+            //selected_img_name = "./up/" + change + "/" + change + "-0.png";
+            //var first_img = "./up/sample/sample-0.png";
+            selected_img_name = "./up/" + selected_img + "/" + selected_img +"-0.png";
+            img.src = selected_img_name;
+
+            //配列に持っている情報を取得→持っていた場合テーブルに記入
+            //配列にある要素の数を取得
+            var table_array_num = array_no[pdf_num].length;
+            //console.log(table_array_num);
+            //要素の数だけテーブルを追加
+            var table = document.getElementById('place_info');
+            for(var l = 0; l < table_array_num; l++){
+                var row = table.insertRow(-1);
+                cell1.push(row.insertCell(-1));
+            cell2.push(row.insertCell(-1));
+            cell3.push(row.insertCell(-1));
+            cell4.push(row.insertCell(-1));
+            cell5.push(row.insertCell(-1));
+            cell6.push(row.insertCell(-1));
+            cell1[l].innerHTML = l + 1;
+            cell2[l].innerHTML = array_point_name[pdf_num][l];
+            cell3[l].innerHTML = array_page[pdf_num][l];
+            cell4[l].innerHTML = array_point_x[pdf_num][l];
+            cell5[l].innerHTML = array_point_y[pdf_num][l];
+            cell6[l].innerHTML = '<input type = "button" value = "削除" onClick= "deleteRow(this)" />'; 
+            }
+            
+            /*
+            //1ページ目のマークを表示
+            //テーブルの値を確認→ページに該当するものが存在した場合、表示
+            var checktable = document.getElementById('place_info');
+            var checkLength = checktable.rows.length;
+            for(var c = 1; c < checkLength; c++){
+                if(checktable.rows[c].cells[2].innerHTML == pageNum+1){
+                    //console.log(checktable.rows[c].cells[3].innerHTML)
+                    var cBall = document.createElement('d'); 
+                    cBall.id = "pic";
+                    cBall.style.position = "absolute";
+                    //マーク位置の計算
+                    //画像表示位置の取得
+                    var elem = document.getElementById('im');
+                    var rect = elem.getBoundingClientRect();
+                    var elemtop = rect.top + window.pageYOffset;
+                    var elemleft = rect.left + window.pageXOffset;
+                    var eTop = parseInt(elemtop);
+                    var eLeft = parseInt(elemleft);
+            
+                    //画像サイズ
+                    var w = elem.width;
+                    var w1 = parseInt(w);
+                    var h = elem.height;
+                    var h1 = parseInt(h);
+                    
+                    //画面サイズから表示位置を取得
+                    var pointx = parseFloat(checktable.rows[c].cells[3].innerHTML);
+                    var pointy = parseFloat(checktable.rows[c].cells[4].innerHTML);
+
+                    //画像上のクリック地点
+                    var drop_pointx = parseInt(pointx*w1) + eLeft;
+                    var drop_pointy = parseInt(pointy*h1) + eTop;
+
+                    var RandLeft = drop_pointx + "px";
+                    var RandTop = drop_pointy + "px";
+                    cBall.style.left = RandLeft;
+                    cBall.style.top = RandTop;
+                    var mark = document.createElement('img');
+                    //mark.id = tabLength;
+                    mark.value = checktable.rows[c].cells[1].innerHTML;
+                    mark.src = "http://10.20.170.52/web/local_pic.png";
+                    mark.addEventListener('click', function(event2){
+                    var bef_change = this.value;
+                    var placeValue = window.prompt("施工箇所名変更", this.value);
+                    if(placeValue == bef_change){
+
+                    }else if(placeValue == null){
+
+                    }
+                    else{
+                        var checktable = document.getElementById('place_info');
+                        var checkLength = checktable.rows.length;
+                        for(var c = 1; c < checkLength; c++){
+                        if(checktable.rows[c].cells[1].innerHTML == bef_change){
+                        checktable.rows[c].cells[1].innerHTML = placeValue;
+                        array_point_name[pdf_num][c-1] = placeValue;
+                        //console.log(array_point_name[pdf_num][c-1]);
+                        //console.log(placeValue);
+                    }
+                }
+                }
+            });
+                    //Divにイメージを組み込む
+                    cBall.appendChild(mark);
+                    //画面にDivを組み込む
+                    div.appendChild(cBall);
+                }
+            }*/
+            
+        }
+    </script>
     </body>
 
 </html>
