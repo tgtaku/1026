@@ -31,6 +31,7 @@
     
 
     <h2>会社名、住所、電話番号を入力してください</h2>
+    <p>
     <form id="c_form">
     <table id = "c_info" name = "c_table">
                 <tr>
@@ -45,68 +46,22 @@
                     <th style="WIDTH: 200px"><input type = "text" value = ""></th>
                     <th style="WIDTH: 200px"><input type = "text" value = ""></th>
                 </tr>
-                <tr>
-                    <th style="WIDTH: 50px">2</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">3</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">4</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">5</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">6</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">7</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">8</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">9</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
-                <tr>
-                    <th style="WIDTH: 50px">10</th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                    <th style="WIDTH: 200px"><input type = "text" value = ""></th>
-                </tr>
+                
             </table>
-            <input type = "button" id = "c_button" name="add_company" value = "登録" onclick="add_com()">
     </form>
+    <input type = "button" id = "add_button" name="add_table" value = "追加" onclick="add_table()">
+</p>
+<input type = "button" id = "c_button" name="add_company" value = "登録" onclick="add_com()">
     </div>
             </div>
         </div>
 </main>
 <script type="text/javascript">
+    var cell1 = [];
+    var cell2 = [];
+    var cell3 = [];
+    var cell4 = [];
+
 function add_com(){
 //テーブル取得
 var table = document.getElementById("c_info");
@@ -145,6 +100,27 @@ console.log(num);
             xhttpreq.send(fd);
             }*/
 
+}
+
+var n = 0;
+function add_table(){
+    var table = document.getElementById("c_info");
+        var tableLength = table.rows.length;
+        
+
+        //会社名
+        //for(var j = 0; j < tableLength; j++){
+            var row = table.insertRow(-1);
+            cell1.push(row.insertCell(-1));
+            cell2.push(row.insertCell(-1));
+            cell3.push(row.insertCell(-1));
+            cell4.push(row.insertCell(-1));
+            cell1[n].innerHTML = parseInt(tableLength);
+            cell2[n].innerHTML = '<input type = "text" value = ""/>';
+            cell3[n].innerHTML = '<input type = "text" value = ""/>';
+            cell4[n].innerHTML = '<input type = "text" value = ""/>';
+            n++;
+    //}
 }
     </script>
     </body>
