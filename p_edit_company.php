@@ -20,12 +20,32 @@ if(isset($_GET['name'])){
             $project_id = $row['projects_id'];
             $i++;
         }
+        session_start();
+        $_SESSION['count'] = $project_id;
     //print_r($project_id);
     //json形式に変更
+    }
+}else{
+        session_start();
+        $project_id = $_SESSION['count'];
+        //print_r($project_id);
+        //現場名、所在地、概要の取得
+        require "conn.php";
+        $mysql_qry = "select * from projects_information_1 where projects_id = '$project_id';";
+        $result = mysqli_query($conn, $mysql_qry);
+        $i = 0;
+        while($row = mysqli_fetch_assoc($result)){
+            $name = $row['projects_name'];
+            $address = $row['projects_street_address'];
+            $overview = $row['overview'];
+            $i++;
+        }
+        
+    }
     //セッションスタート
-    session_start();
-    $_SESSION['count'] = $project_id;
-    $json_project_id = json_encode($project_id);}
+    require "conn.php";
+    $json_project_id = json_encode($project_id);
+    
 
     //図面情報の取得
     $row_array_file = array();
@@ -61,7 +81,7 @@ if(isset($_GET['name'])){
     //json形式に変更
     $json_array_user = json_encode($row_array_user);
     $json_array_company = json_encode($row_array_company);
-}
+
 
 ?>
 
@@ -87,7 +107,7 @@ if(isset($_GET['name'])){
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">

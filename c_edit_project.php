@@ -22,7 +22,7 @@
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php" style="background-color:gray">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">
@@ -42,12 +42,7 @@
                     <th style="WIDTH: 200px" id="address">パスワード</th>
                     <th style="WIDTH: 50px" id="editButton"></th>
                 </tr>
-                <tr>
-                <th style="WIDTH: 50px" id="no">1</th>
-                    <th style="WIDTH: 200px" id="project">大和一郎</th>
-                    <th style="WIDTH: 200px" id="address">password</th>
-                    <th style="WIDTH: 50px" id="editButton"><input type = "checkbox" name = "ch" id="user_check" ></th>
-                </tr>
+                
             </table>
             <!--<input type = "button" id = "pro_button" name="editpro" value = "現場編集" onclick="editpro()">-->
     </form>

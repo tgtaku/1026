@@ -135,7 +135,7 @@ $json_array_glob = json_encode($row_array_glob);
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">
@@ -240,7 +240,7 @@ $json_array_glob = json_encode($row_array_glob);
             //PDF名がnamesのどれと一致するか確認し、一致した番号の配列にそれぞれの値を格納
             for(var n = 0; n < array_file_name.length; n++){
                 if(edit_array[m]['pdf_name'] == array_file_name[n]){
-                    array_no[n].push("");
+                    array_no[n].push("0");
                     array_point_name[n].push(edit_array[m]['report_place_name']);
                     array_point_x[n].push(edit_array[m]['X']);
                     array_point_y[n].push(edit_array[m]['Y']);
@@ -337,7 +337,6 @@ $json_array_glob = json_encode($row_array_glob);
                         if(checktable.rows[c].cells[1].innerHTML == bef_change){
                         checktable.rows[c].cells[1].innerHTML = placeValue;
                         array_point_name[pdf_num][c-1] = placeValue;
-                        console.log("1" + array_point_name[pdf_num][c-1]);
                         //console.log(placeValue);
                     }
                 }
@@ -696,6 +695,7 @@ $json_array_glob = json_encode($row_array_glob);
         }
         
         //配列から施工箇所、ページ、X座標、Y座標を削除
+        array_no[pdf_num].splice(tr.cells[0].innerHTML-1,1);
         array_point_name[pdf_num].splice(tr.cells[0].innerHTML-1,1);
         array_point_x[pdf_num].splice(tr.cells[0].innerHTML-1,1);
         array_point_y[pdf_num].splice(tr.cells[0].innerHTML-1,1);
@@ -716,14 +716,20 @@ $json_array_glob = json_encode($row_array_glob);
         
         }
 
-        function ent(){
+        async function ent(){
+            
+            console.log(array_point_name);
             for(var i = 0; i < array_point_name.length; i++){
                 if(array_point_name[i][0] == null){
 
                 }else{
-                    
+                    console.log("--------------------------");
+
+                    let dataPOST = await post(array_file_name[i], array_no[i], array_point_name[i], array_point_x[i],array_point_y[i],array_page[i]);
+                    /*
             fd = new FormData();
             fd.append('file_name', array_file_name[i]);
+            fd.append('no', array_no[i]);
             fd.append('array_point_name', array_point_name[i]);
             fd.append('pointx',array_point_x[i]);
             fd.append('pointy', array_point_y[i]);
@@ -740,6 +746,7 @@ $json_array_glob = json_encode($row_array_glob);
                 //window.location.href = 'mypage.php';
             });
             xhttpreq.send(fd);
+            console.log(array_file_name[i]);
                     console.log(array_no[i]);
             
                     console.log(array_point_name[i]);
@@ -748,11 +755,43 @@ $json_array_glob = json_encode($row_array_glob);
             
                     console.log(array_point_y[i]);
             
-                    console.log(array_page[i]);
+                    console.log(array_page[i]);*/
                 }
                 
             }
             
+            }
+
+            function post(array_file_name, array_no, array_point_name, array_point_x,array_point_y,array_page){
+            fd = new FormData();
+            fd.append('file_name', array_file_name);
+            fd.append('no', array_no);
+            fd.append('array_point_name', array_point_name);
+            fd.append('pointx',array_point_x);
+            fd.append('pointy', array_point_y);
+            fd.append('page', array_page);
+            console.log(fd);
+            xhttpreq = new XMLHttpRequest();
+            xhttpreq.onreadystatechange = function() {
+                if (xhttpreq.readyState == 4 && xhttpreq.status == 200) {
+                    //alert(xhttpreq.responseText);
+                }
+            };
+            xhttpreq.open("POST", "update_report_place_info.php", true);
+            xhttpreq.addEventListener('load', (event) => {
+                window.location.href = 'p_edit_company.php';
+            });
+            xhttpreq.send(fd);
+            console.log(array_file_name);
+                    console.log(array_no);
+            
+                    console.log(array_point_name);
+            
+                    console.log(array_point_x);
+            
+                    console.log(array_point_y);
+            
+                    console.log(array_page);
             }
 
             function getPic(obj){

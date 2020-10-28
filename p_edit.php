@@ -160,7 +160,7 @@ $json_array_overview = json_encode($row_array_overview);
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">

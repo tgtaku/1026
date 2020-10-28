@@ -6,12 +6,40 @@ session_start();
 $project_id = $_SESSION['count'];
 $project_id_now = json_encode($project_id);
 
-/*if(isset($_GET['id'])){
-    $p_id = $_GET['id'];
-    $json_id = json_encode($p_id);*/
-    //print_r($p_id);
-    //既存ユーザーの取得
+//既存ユーザーの取得
+//検索用
+$row_array_user = [];
+$row_array_company = [];
+$row_array_sum = [];
+//事前取得用
+$row_array_user_db = [];
+$row_array_company_db = [];
 
+require "conn.php";
+$mysql_qry_user = "select * from assign_company_information_1 inner join users_information_1 on assign_company_information_1.companies_id = users_information_1.companies_id inner join projects_information_1 on assign_company_information_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on assign_company_information_1.companies_id = companies_information_1.companies_id where assign_company_information_1.projects_id = '$project_id';";
+$result_user = mysqli_query($conn, $mysql_qry_user);
+if(mysqli_num_rows($result_user) > 0){
+    //print_r($result_user);
+    $i = 0;
+    while($row = mysqli_fetch_assoc($result_user)){
+            $row_array_user_db[$i] = $row['users_name'];
+            $row_array_company_db[$i] = $row['companies_name'];
+            $i++;
+        }
+    }else{
+
+    }
+    //json形式に変更
+    $json_array_user_db = json_encode($row_array_user_db);
+    $json_array_company_db = json_encode($row_array_company_db);
+    //初期情報
+    $json_array_user = json_encode($row_array_user);
+    $json_array_company = json_encode($row_array_company);
+    $json_array_sum = json_encode($row_array_sum);
+    
+        
+
+/*
 //参加者情報の取得
 $row_array_user = array();
 require "conn.php";
@@ -25,6 +53,7 @@ if(mysqli_num_rows($result_user) > 0){
         $row_array_user[$i] = $row['users_name'];
         $row_array_company[$i] = $row['companies_name'];
         $i++;
+        $row_array_sum = "";
     }
     }else{
         $row_array_user ="";
@@ -38,7 +67,7 @@ $json_array_user = json_encode($row_array_user);
 $json_array_company = json_encode($row_array_company);
 $json_array_sum = json_encode($row_array_sum);
 
-
+*/
 
 //検索ボタン押下時の処理
 if(isset($_POST['search_user'])){
@@ -241,7 +270,7 @@ $json_array_sum = json_encode($row_array_sum);
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">
@@ -250,7 +279,7 @@ $json_array_sum = json_encode($row_array_sum);
     <h2>ユーザを登録してください。</h2>
     <h2>参加者情報</h2>
     <p>
-        <table id = "user_info" name = "table_user">
+        <table id = "db_user_info" name = "table_user">
                 <tr>
                     
                     <th style="WIDTH: 200px" id="com">企業名</th>
@@ -258,11 +287,14 @@ $json_array_sum = json_encode($row_array_sum);
                 </tr>            
         </table>
 </p>
-    <p>
-        <form id = "sub" name = "sub" action="p_edit_user.php" method = "post">
+
+<h2>検索欄</h2>
+
+<p>
+        <form action="p_edit_user.php" method = "post">
         会社名<input type = "text" name = "id" value = ""><br />
         ユーザー名<input type ="text" name="user_name" value = ""><br />
-        <input type = "submit" id = "search_user" name="search_user" value = "検索"　occlick = "submit">
+        <input type = "submit" id = "search_user" name="search_user" value = "検索">
         </form>
     </p>     
     
@@ -281,6 +313,52 @@ $json_array_sum = json_encode($row_array_sum);
         </div>
 </main>
     <script type="text/javascript">
+
+        //既存ユーザーの表示
+        var db_user = <?php echo $json_array_user_db; ?>;
+        var db_company = <?php echo $json_array_company_db; ?>;
+        var db_cell1 = [];
+        var db_cell2 = [];
+
+        if(db_company!=""){
+            console.log(db_company);
+            console.log(db_user.length);
+            //テーブルの作成
+            var table = document.getElementById("db_user_info");
+            //テーブルの大きさ(会社枠)
+            var i = 0;
+            //会社名
+            for(var j = 0; j < db_company.length; j++){
+                if(j == 0){
+                    var row = table.insertRow(-1);
+                    db_cell1.push(row.insertCell(-1));
+                    db_cell2.push(row.insertCell(-1));
+                    db_cell1[j].innerHTML = db_company[j];
+                    db_cell2[j].innerHTML = db_user[j];
+                    i++;
+                }else{
+                    if(db_company[j] == db_company[i-1]){
+                        var row = table.insertRow(-1);
+                        db_cell1.push(row.insertCell(-1));
+                        db_cell2.push(row.insertCell(-1));
+                        db_cell2[j].innerHTML = db_user[j];
+                    }else{
+                        var row = table.insertRow(-1);
+                        db_cell1.push(row.insertCell(-1));
+                        db_cell2.push(row.insertCell(-1));
+                        db_cell1[j].innerHTML = db_company[j];
+                        db_cell2[j].innerHTML = db_user[j];
+                        i++;
+                    }
+                }
+                
+                
+            // = company.length + user.length;
+            
+        }
+    }
+
+
         //var names =[];
         var sum = <?php echo $json_array_sum; ?>;
         //console.log(sum['company1'][0]);
@@ -298,36 +376,42 @@ $json_array_sum = json_encode($row_array_sum);
             //テーブルの作成
             var table = document.getElementById("user_info");
             //テーブルの大きさ(会社枠)
+            var p = 0;
             var i = 0;
             //会社名
             for(var j = 0; j < company.length; j++){
                 var row = table.insertRow(-1);
                 cell1.push(row.insertCell(-1));
                 cell2.push(row.insertCell(-1));
-                
+                cell3.push(row.insertCell(-1));
                 cell1[i].innerHTML = company[j];
-                
+                cell3[i].innerHTML = '<input type = "checkbox" onclick="changeCom(this)"/>';
                 i++;
                 //ユーザ名
                 for(var k = 0; k < sum[company[j]]['num']; k++){
                     var row = table.insertRow(-1);
                     cell1.push(row.insertCell(-1));
                     cell2.push(row.insertCell(-1));
-                    
+                    cell3.push(row.insertCell(-1));
                     cell2[i].innerHTML = sum[company[j]][k];
-                    
+                    cell3[i].innerHTML = '<input type = "checkbox" name = "ch"/>';
+                    cell3[i].id = i;
+                    if(sum[company[j]][k] == db_user[p]){
+                        //cell3[i].innerHTML.checked = true;
+                        var c_val = table.rows[i+1].cells[2].children[0];
+                        c_val.checked = true;
+                        p++;
+                    }
                     i++;
                 }
             }
             tableLength = company.length + user.length;
+
             
         }
         
     </script>
     <script>
-        //プロジェクトIDと会社名、ユーザ名を送信
-        var p_id = <?php echo $json_id; ?>;
-
         function selectall(th){
             for(var t = 1; t < table.rows.length; t++){
                 if(th.checked == true){
@@ -375,19 +459,35 @@ $json_array_sum = json_encode($row_array_sum);
         }
 
         function gotuser(){
-            
-            var c_name;
-            var u_name;
+            //プロジェクトIDと会社名、ユーザ名を送信
+            //var p_id = <?php echo $project_id_now; ?>;
+            var c_name = [];
+            var u_name = [];
+            var array_cnt_com_user = [];
+            var cnt_com_user = 0;
             var le = table.rows.length;
             for(var p = 1; p < le; p++){
                 if(table.rows[p].cells[0].innerHTML != ""){
-                    c_name = table.rows[p].cells[0].innerHTML;
+                    c_name.push(table.rows[p].cells[0].innerHTML);
+                    if(p != 1){
+                        array_cnt_com_user.push(cnt_com_user);
+                        var cnt_com_user = 0;
+                    }
                 }
                 else{
                     if(table.rows[p].cells[2].children[0].checked == true){
-                        u_name = table.rows[p].cells[1].innerHTML;
+                        u_name.push(table.rows[p].cells[1].innerHTML);
+                        cnt_com_user++;
+
+                        if(p == le-1){
+                            array_cnt_com_user.push(cnt_com_user);
+                        var cnt_com_user = 0;
+                        }
+                    }
+                }
+            }
                         fd = new FormData();
-                        fd.append('id', p_id);
+                        fd.append('cnt', array_cnt_com_user);
                         fd.append('company',c_name);
                         fd.append('user', u_name);
                         xhttpreq = new XMLHttpRequest();
@@ -396,23 +496,12 @@ $json_array_sum = json_encode($row_array_sum);
                         alert(xhttpreq.responseText);
                         }
                         };
-                        xhttpreq.open("POST", "insert_assign_com.php", true);
+                        xhttpreq.open("POST", "update_assign_com.php", true);
+                        xhttpreq.addEventListener('load', (event) => {
+                        //window.location.href = 'p_edit_company.php';
+                        });
                         xhttpreq.send(fd);
-                    }
-                    else{
-                    } 
                 }
-            }
-            window.location.href = 'p_edit_company.php';
-        }
-
-        function submit(){
-            var ele = document.createElement('input');
-            //データを設定
-            ele.setAttribute('name', 'id');
-            ele.setAttribute('value', p_id);
-            document.sub.appendChild(ele)
-        }
     </script>
     </body>
 

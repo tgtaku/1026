@@ -1,4 +1,32 @@
 <?php
+//ポスト情報の確認
+if(isset($_POST['search_pro'])){
+    require "conn.php";
+    $project = $_POST["project"];
+    $address = $_POST["address"];
+    $overview = $_POST["overview"];
+    //結果格納用の配列
+    $row_array_project_id = "";
+    $row_array_project = array();
+    $row_array_address = array();
+    $row_array_overview = array();
+
+    //全部なし
+    if($project =="" && $address == "" && $overview == ""){
+        $mysql_qry = "select * from projects_information_1;";
+        $result = mysqli_query($conn, $mysql_qry);
+        if(mysqli_num_rows($result) > 0){
+            $i = 0;
+            while($row = mysqli_fetch_assoc($result)){
+                $row_array_project_id[$i] = $row['projects_id'];
+                $row_array_project[$i] = $row['projects_name'];
+                $row_array_address[$i] = $row['projects_street_address'];
+                $row_array_overview[$i] = $row['overview'];
+                $i++;
+            }
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -22,7 +50,7 @@
                     <li><a href="c_entry.php">-施工会社登録</a></li>
                     <li><a href="c_edit.php" style="background-color:gray">-施工会社/ユーザ編集</a></li>
                     <li>施工状況確認</li>
-                    <li><a href="report.php">-報告書確認</a></li>
+                    <li><a href="select_report.php">-報告書確認</a></li>
                 </ul>
             </div>
             <div class="maincol">
@@ -48,14 +76,7 @@
                     <th style="WIDTH: 100px" id="editButton"></th>
                     <th style="WIDTH: 100px" id="editButton"></th>
                 </tr>
-                <tr>
-                <th style="WIDTH: 50px" id="no">1</th>
-                    <th style="WIDTH: 200px" id="project">大和ハウス</th>
-                    <th style="WIDTH: 200px" id="address">飯田橋三丁目</th>
-                    <th style="WIDTH: 200px" id="overview">01234567890</th>
-                    <th style="WIDTH: 100px" id="editButton"><input type = "button" value = "会社情報編集"></th>
-                    <th style="WIDTH: 100px" id="editButton"><input type = "button" value = "ユーザ情報編集"></th>
-                </tr>
+                
             </table>
             <!--<input type = "button" id = "pro_button" name="editpro" value = "現場編集" onclick="editpro()">-->
     </form>
