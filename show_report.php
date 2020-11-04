@@ -1,4 +1,65 @@
 <?php
+$report_name = $_GET['report'];
+//出力用
+$project_name = "";//現場名
+$project_address = "";//現場所在地
+$project_overview = "";//現場概要
+$company_name = "";//施工会社名
+$company_address = "";//施工会社住所
+$company_tel = "";//施工会社電話番号
+$reporter = "";//施工会社報告者名
+$report_place = "";//施工ヶ所
+$pic_date = [];//撮影日時
+$pic_path = [];//画像パス
+$comment = [];//コメント
+
+//現場情報の取得
+//会社情報の取得
+require "conn.php";
+$mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id where reports_name = '$report_name';";
+        //$mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id;";
+        $result = mysqli_query($conn, $mysql_qry);
+        //print_r($result);
+        if(mysqli_num_rows($result) > 0){
+            $i = 0;
+            while($row = mysqli_fetch_assoc($result)){
+                //print_r('<pre>');
+                //print_r($row);
+                $project_name = $row['projects_name'];//現場名
+                $project_address = $row['projects_street_address'];//現場所在地
+                $project_overview = $row['overview'];//現場概要
+                $company_name = $row['companies_name'];//施工会社名
+                $company_address = $row['street_address'];//施工会社住所
+                $company_tel = $row['tel'];//施工会社電話番号
+                $reporter = $row['reporter'];//施工会社報告者名
+                $report_place = $row['reports_place'];//施工ヶ所
+                $i++;
+            }
+        }
+    //}
+
+//写真情報の取得
+$mysql_qry = "select * from repors_information_1 inner join pictures_information_1 on repors_information_1.pictures_id = pictures_information_1.pictures_name where repors_name = '$report_name';";
+        //$mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id;";
+        $result = mysqli_query($conn, $mysql_qry);
+        //print_r($result);
+        if(mysqli_num_rows($result) > 0){
+            $i = 0;
+            while($row = mysqli_fetch_assoc($result)){
+                //print_r('<pre>');
+                //print_r($row);
+                array_push($pic_date, $row['date']);//撮影日時
+                array_push($pic_path, $row['path']);//画像パス
+                array_push($comment, $row['comment']);//コメント
+                $i++;
+            }
+        }
+
+//配列のエンコード
+$json_array_pic_date = json_encode($pic_date);
+$json_array_pic_path = json_encode($pic_path);
+$json_array_comment = json_encode($comment);
+
 ?>
 
 <!DOCTYPE html>
@@ -27,7 +88,7 @@
             </div>
             <div class="maincol">
                 <div class="maincol-container">
-    
+                
     <table id = "report" name = "report">
                 <!--現場情報-->
                 <tr id = "project_info">
@@ -35,15 +96,15 @@
                 </tr>
                 <tr>
                     <td id = "th_title">現場名</td>
-                    <td>晴海トリトン</td>
+                    <td><?php echo $project_name; ?></td>
                 </tr>
                 <tr>
                     <td id = "th_title">所在地</td>
-                    <td>東京都中央区晴海</td>
+                    <td><?php echo $project_address; ?></td>
                 </tr>
                 <tr>
                     <td id = "th_title">概要</td>
-                    <td>ビル11階</td>
+                    <td><?php echo $project_overview; ?></td>
                 </tr>
                 <tr id = "blank">
                 <td colspan = "2"></td>
@@ -54,19 +115,19 @@
                 </tr>
                 <tr>
                     <td id = "th_title">会社名</td>
-                    <td>清水建設</td>
+                    <td><?php echo $company_name; ?></td>
                 </tr>
                 <tr>
                     <td id = "th_title">住所</td>
-                    <td>静岡県清水</td>
+                    <td><?php echo $company_address; ?></td>
                 </tr>
                 <tr>
                     <td id = "th_title">電話番号</td>
-                    <td>090-1111-2222</td>
+                    <td><?php echo $company_tel; ?></td>
                 </tr>
                 <tr>
                     <td id = "th_title">報告者</td>
-                    <td>清水太郎</td>
+                    <td><?php echo $reporter; ?></td>
                 </tr>
                 <tr id = "blank">
                     <td colspan = "2"></td>
@@ -78,9 +139,9 @@
                 </tr>
                 <tr>
                     <td id = "th_title">施工箇所</td>
-                    <td>リビング</td>
+                    <td><?php echo $report_place; ?></td>
                 </tr>
-                <tr>
+                <!--<tr>
                     <td id = "th_title">撮影日時</td>
                     <td>2020/11/04　12:34:56</td>
                 </tr>
@@ -104,7 +165,7 @@
                 <tr>
                     <td id = "th_title">コメント</td>
                     <td></td>
-                </tr>
+                </tr>-->
                 
                 
             </table>
@@ -113,7 +174,11 @@
         </div>
 </main>
 <script>
+    var array_pic_date = <?php echo $json_array_pic_date; ?>;
+    var array_pic_path = <?php echo $json_array_pic_path; ?>;
+    var array_pic_comment = <?php echo $json_array_comment; ?>;
 
+    
 </script>
     </body>
 </html>
