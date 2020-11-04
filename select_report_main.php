@@ -1,4 +1,7 @@
 <?php
+//ログインユーザの取得(仮)
+$user = "大和一郎";
+
 //検索結果格納用配列
 $row_array_project_name = [];
 $row_array_company = [];
@@ -7,58 +10,14 @@ $row_array_date = [];
 $row_array_report_name = [];
 
 
-if(isset($_POST['search_pro'])){
     require "conn.php";
-    //POST情報の取得
-    $project_name = $_POST["project"];
-    $company = $_POST["com"];
-    $report_place = $_POST["report_place"];
-    $date = $_POST["date"];
+    /*$project = $_POST["project"];
+    $address = $_POST["address"];
+    $overview = $_POST["overview"];*/
 
-    /*print_r($project_name);
-    print_r($company);
-    print_r($report_place);
-    print_r($date);*/
-
-    $pre_add_qry = "";
     //全部なし
-    if($project_name !==""){
-        $pre_add_qry = " where projects_name like '%$project_name%'";
-    }
-    if($company !== ""){
-        if($pre_add_qry !== ""){
-            $pre_add_qry = $pre_add_qry." or companies_name like '%$company%'";
-        }else{
-            $pre_add_qry = " where companies_name like '%$company%'";
-        }
-    }
-    if($report_place !== ""){
-        if($pre_add_qry !==""){
-            $pre_add_qry = $pre_add_qry." or reports_place like '%$report_place%'";
-        }else{
-            $pre_add_qry = " where reports_place like '%$report_place%'";
-        }
-    }
-    if($date !== ""){
-        if($pre_add_qry !==""){
-            $pre_add_qry = $pre_add_qry." or update_date like '%$date%'";
-        }else{
-            $pre_add_qry = " where update_date like '%$date%'";
-        }
-    }
-    $base_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id";
-    $add_qry = ";";
-        
-    if($pre_add_qry !== ""){
-        $mysql_qry = $base_qry.$pre_add_qry.$add_qry;
-        //print_r($mysql_qry);
-    }else{
-        $mysql_qry = $base_qry.$add_qry;
-    }
-        //$mysql_qry = "select distinct * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id inner join projects_kanri_1 on reports_name_1.projects_id = projects_kanri_1.projects_id;";
-        //$base_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id";
-        //$add_qry = ";";
-        
+    //if($project =="" && $address == "" && $overview == ""){
+        $mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id inner join projects_kanri_1 on reports_name_1.projects_id = projects_kanri_1.projects_id where user_name = '$user';";
         //$mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id;";
         //$mysql_qry = "select * from projects_information_1 where projects_name like '%$project%' or projects_street_address like '%$address%';";
         $result = mysqli_query($conn, $mysql_qry);
@@ -78,7 +37,7 @@ if(isset($_POST['search_pro'])){
             }
         }
     //}
-}
+
 $json_array_project_name = json_encode($row_array_project_name);
 $json_array_company = json_encode($row_array_company);
 $json_array_report_place = json_encode($row_array_report_place);
@@ -115,19 +74,9 @@ $json_array_report_name = json_encode($row_array_report_name);
                 <div class="maincol-container">
     
 
-    <h2>表示する報告書を選択してください。</h2>
+    <h2>担当現場の報告書を確認する。</h2>
 
-    <p>
-        <form action="select_report.php" method = "post">
-        管理者ID<input type = "text" name = "kanri_id" value = ""><br />
-        現場名<input type ="text" name="project" value = ""><br />
-        施工会社<input type ="text" name="com" value = ""><br />
-        施工箇所<input type ="text" name="report_place" value = ""><br />
-        日付<input type ="text" name="date" value = ""><br />
         
-        <input type = "submit" id = "search_pro" name="search_pro" value = "検索">
-        </form>
-    </p>
     <table id = "pro_info" name = "table_com">
                 <tr>
                 <th style="WIDTH: 50px" id="no">No</th>
@@ -192,6 +141,16 @@ if(<?php echo $json_array_project_name; ?> != ""){
                 //cell4[j].innerHTML = '<input type = "submit" id = "p_project" name="p_project" value = "編集">';
         }
         }
+</script>
+<script>
+    function show_report(tr){
+        //表示ボタン行のレポート名を取得
+        select_row = tr.parentNode.parentNode;
+        var report_name = select_row.cells[1].innerHTML;
+        var param = "report="+report_name;
+        //console.log(row.cells[1].id);
+        window.open("show_report.php?" + param, "",'width=1200, height=900');
+    }
 </script>
     </body>
 </html>

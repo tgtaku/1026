@@ -1,0 +1,109 @@
+@charset "utf-8";
+
+html * {
+	box-sizing: border-box;
+}
+
+
+
+/* メインコンテンツレイアウト部分 */
+main {} 
+.main-container {
+	overflow: hidden;
+	/*padding: 0 0 40px 0;*/
+    background: #ffffff;
+}
+.sidebar {
+	float: left;
+	/*margin: 0 0 0 20px;
+	padding: 30px 0 30px 0;*/
+    width: 300px;
+	background-color: aquamarine;
+	height: 100vh;
+}
+.maincol {
+	float: right;
+	margin: 0 20px 0 -360px;
+	padding: 30px 0 30px 0;
+	width: 100%;
+}
+.maincol-container {
+	margin-left: 360px;
+	/*overflow-x: scroll;*/
+}
+/* 1コラム目 */
+.sidebar h1 {
+	margin: 0 0 20px 0;
+    font-size: 2rem;
+    text-align: center;
+    
+}
+.subnav {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px dashed #dadada;
+}
+.subnav li {
+	padding: 20px;
+	border-bottom: 1px dashed #dadada;
+}
+.subnav li a {
+	text-decoration: none;
+	text-decoration: underline;
+	position: relative;
+}
+.subnav li a:hover,
+.subnav li a.current {
+	color: #7bae34;
+}
+table,td,th{
+    border: 1px solid black;
+}
+
+table{
+    border-collapse: collapse;
+    width: 80%;
+}
+
+#project_info{
+    text-align: center;
+    font-size: 24px;
+    background-color: rgb(252, 191, 61);
+}
+
+#th_title{
+    width: 20%;
+    text-align: center;
+    font-size: 20px;
+    background-color: rgb(255, 247, 134);
+}
+
+td:nth-child(2){
+    text-align: center;
+    font-size: 20px;
+}
+
+#blank{
+    background-color: gainsboro;
+    height: 10px;
+    border: 1px solid black;
+}
+.pic{
+    
+    text-align: center;
+}
+.pic img{
+    margin: 1%;
+    width: 70%;
+    
+}
+
+label{
+	color:#000000;
+	background-color: lightgray;
+	cursor: pointer;
+}
+input[type="file"]{
+	display: none;
+}
