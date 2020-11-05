@@ -40,7 +40,7 @@ $mysql_qry = "select * from reports_name_1 inner join projects_information_1 on 
 
 //写真情報の取得
 $mysql_qry = "select * from repors_information_1 inner join pictures_information_1 on repors_information_1.pictures_id = pictures_information_1.pictures_name where repors_name = '$report_name';";
-        //$mysql_qry = "select * from reports_name_1 inner join projects_information_1 on reports_name_1.projects_id = projects_information_1.projects_id inner join companies_information_1 on reports_name_1.company_id = companies_information_1.companies_id;";
+//$mysql_qry = "select * from repors_information_1 inner join pictures_information_1 on repors_information_1.pictures_id = pictures_information_1.pictures_name;";       
         $result = mysqli_query($conn, $mysql_qry);
         //print_r($result);
         if(mysqli_num_rows($result) > 0){
@@ -178,7 +178,43 @@ $json_array_comment = json_encode($comment);
     var array_pic_path = <?php echo $json_array_pic_path; ?>;
     var array_pic_comment = <?php echo $json_array_comment; ?>;
 
-    
+    //テーブル情報
+    var table = document.getElementById("report");
+    var push_length = array_pic_date.length;
+        var cell_title_date = [];
+        var cell_date = [];
+        var cell_pic = [];
+        var cell_title_comment = [];
+        var cell_comment = [];
+
+            //会社名
+            for(var j = 0; j < push_length; j++){
+                //施工箇所情報の登録
+                var row = table.insertRow(-1);
+                cell_title_date.push(row.insertCell(-1));
+                cell_date.push(row.insertCell(-1));
+                cell_title_date[j].id = "th_title";
+                cell_title_date[j].innerHTML = "撮影日時";
+                cell_date[j].innerHTML = array_pic_date[j];
+                
+                //写真情報の登録
+                var row = table.insertRow(-1);
+                cell_pic.push(row.insertCell(-1));
+                cell_pic[j].id = "src";
+                cell_pic[j].setAttribute("colSpan", "2");
+                var img = document.createElement('img');
+                img.src = array_pic_path[j];
+                cell_pic[j].appendChild(img);
+
+                //コメントの登録
+                var row = table.insertRow(-1);
+                cell_title_comment.push(row.insertCell(-1));
+                cell_comment.push(row.insertCell(-1));
+                cell_title_comment[j].id = "th_title";
+                cell_title_comment[j].innerHTML = "コメント";
+                cell_comment[j].innerHTML = array_pic_comment[j];
+                
+        }
 </script>
     </body>
 </html>
